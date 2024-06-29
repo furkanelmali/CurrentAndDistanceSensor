@@ -1,0 +1,26 @@
+--cpu Cortex-M3
+"yusuf_2\startup_stm32f100xb.o"
+"yusuf_2\liquidcrystal_i2c.o"
+"yusuf_2\ina219.o"
+"yusuf_2\main.o"
+"yusuf_2\stm32f1xx_it.o"
+"yusuf_2\stm32f1xx_hal_msp.o"
+"yusuf_2\stm32f1xx_hal_gpio_ex.o"
+"yusuf_2\stm32f1xx_hal_i2c.o"
+"yusuf_2\stm32f1xx_hal.o"
+"yusuf_2\stm32f1xx_hal_rcc.o"
+"yusuf_2\stm32f1xx_hal_rcc_ex.o"
+"yusuf_2\stm32f1xx_hal_gpio.o"
+"yusuf_2\stm32f1xx_hal_dma.o"
+"yusuf_2\stm32f1xx_hal_cortex.o"
+"yusuf_2\stm32f1xx_hal_pwr.o"
+"yusuf_2\stm32f1xx_hal_flash.o"
+"yusuf_2\stm32f1xx_hal_flash_ex.o"
+"yusuf_2\stm32f1xx_hal_exti.o"
+"yusuf_2\stm32f1xx_hal_tim.o"
+"yusuf_2\stm32f1xx_hal_tim_ex.o"
+"yusuf_2\system_stm32f1xx.o"
+--strict --scatter "yusuf_2\yusuf_2.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "yusuf_2.map" -o yusuf_2\yusuf_2.axf

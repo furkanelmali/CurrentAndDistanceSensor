@@ -21,6 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "INA219.h"
+#include "liquidcrystal_i2c.h"
+#include "stdio.h"
 
 /* USER CODE END Includes */
 
@@ -45,6 +48,17 @@ I2C_HandleTypeDef hi2c1;
 TIM_HandleTypeDef htim1;
 
 /* USER CODE BEGIN PV */
+INA219_t ina219;
+
+#define TRIG_PIN GPIO_PIN_9
+#define TRIG_PORT GPIOA
+#define ECHO_PIN GPIO_PIN_8
+#define ECHO_PORT GPIOA
+uint32_t pMillis;
+uint32_t Value1 = 0;
+uint32_t Value2 = 0;
+uint16_t Distance  = 0;  // cm
+
 
 /* USER CODE END PV */
 
@@ -70,7 +84,9 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+	char deger[16];
+	uint32_t vbus, vshunt, current, maxCurrent;
+	
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -94,13 +110,68 @@ int main(void)
   MX_I2C1_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
+	HD44780_Init(2);
+	HD44780_Backlight();
+	HAL_TIM_Base_Start(&htim1);
+	HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_RESET);
+	
+	  while(!INA219_Init(&ina219, &hi2c1, INA219_ADDRESS))
+  {
 
+  }
+		
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
+    while (1)
   {
+		
+    HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_SET);  // pull the TRIG pin HIGH
+    __HAL_TIM_SET_COUNTER(&htim1, 0);
+    while (__HAL_TIM_GET_COUNTER (&htim1) < 10);  // wait for 10 us
+    HAL_GPIO_WritePin(TRIG_PORT, TRIG_PIN, GPIO_PIN_RESET);  // pull the TRIG pin low
+
+    pMillis = HAL_GetTick(); // used this to avoid infinite while loop  (for timeout)
+    // wait for the echo pin to go high
+    while (!(HAL_GPIO_ReadPin (ECHO_PORT, ECHO_PIN)) && pMillis + 10 >  HAL_GetTick());
+    Value1 = __HAL_TIM_GET_COUNTER (&htim1);
+
+    pMillis = HAL_GetTick(); // used this to avoid infinite while loop (for timeout)
+    // wait for the echo pin to go low
+    while ((HAL_GPIO_ReadPin (ECHO_PORT, ECHO_PIN)) && pMillis + 50 > HAL_GetTick());
+    Value2 = __HAL_TIM_GET_COUNTER (&htim1);
+
+    Distance = (Value2-Value1)* 0.034/2;
+    HAL_Delay(50);
+		sprintf(deger,"dis %d cm", Distance);
+		HD44780_SetCursor(0,0);
+		HD44780_PrintStr(deger);
+		vbus = INA219_ReadBusVoltage(&ina219);
+		vshunt = INA219_ReadShuntVolage(&ina219);
+		current = INA219_ReadCurrent(&ina219);
+		if(maxCurrent == 0 || maxCurrent < current)
+		{
+			maxCurrent = current;
+		}
+		sprintf(deger,"cur %d mA", current);
+		HD44780_SetCursor(0,1);
+		HD44780_PrintStr(deger);
+		sprintf(deger,"MAX %d mA", maxCurrent);
+		HD44780_SetCursor(8,0);
+		HD44780_PrintStr(deger);
+		
+		if(maxCurrent >= 200)
+		{
+			HAL_GPIO_WritePin(GPIOA,GPIO_PIN_5,1);
+			HAL_GPIO_WritePin(GPIOA,GPIO_PIN_6,0);
+		}
+		else
+		{
+			HAL_GPIO_WritePin(GPIOA,GPIO_PIN_5,0);
+			HAL_GPIO_WritePin(GPIOA,GPIO_PIN_6,1);
+		}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
